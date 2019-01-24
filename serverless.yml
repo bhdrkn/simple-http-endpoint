@@ -1,0 +1,36 @@
+service: simple-http-endpoint
+
+
+provider:
+  name: aws
+  runtime: java8
+  stage: ${opt:stage, self:custom.defaultStage}
+  profile: ${self:custom.configurations.${self:provider.stage}.profile}
+  region: ${self:custom.configurations.${self:provider.stage}.region}
+
+package:
+  artifact: build/libs/simple-http-endpoint-1.0-all.jar
+
+custom:
+  defaultStage: dev
+  configurations:
+    dev:
+      profile: serverless-cli
+      region: eu-west-2
+    beta:
+      profile: simple-http-beta
+      region: us-west-2
+    prod:
+      profile: simple-http-prod
+      region: us-east-1
+
+functions:
+  hello:
+    description: "A simple hello world handler."
+    handler: com.bahadirakin.handlers.hello.HelloWorldHandler
+    events:
+      - http:
+          path: hello
+          method: get
+    memorySize: 256
+    timeout: 25
