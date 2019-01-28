@@ -1,6 +1,7 @@
 package com.bahadirakin.modules
 
 import com.bahadirakin.services.NameService
+import com.fasterxml.jackson.databind.ObjectMapper
 import dagger.Module
 import dagger.Provides
 import javax.inject.Singleton
@@ -17,4 +18,11 @@ class ServiceModule {
     @Provides
     @Singleton
     fun provideNameService() = NameService()
+
+    /**
+     * Provides JSON-OBJ mapper.
+     */
+    @Provides
+    @Singleton
+    fun provideObjectMapper() = ObjectMapper()
 }

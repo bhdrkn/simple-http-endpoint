@@ -11,5 +11,5 @@ class HelloWorldOperation @Inject constructor(private val nameService: NameServi
     /**
      * Executes hello world operation.
      */
-    fun execute() = "Hello, " + nameService.provideName()
+    fun execute() = HelloMessage("Hello", nameService.provideName())
 }

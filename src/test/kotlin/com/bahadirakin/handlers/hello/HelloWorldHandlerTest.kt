@@ -1,6 +1,8 @@
 package com.bahadirakin.handlers.hello
 
 import com.amazonaws.services.lambda.runtime.Context
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
+import com.bahadirakin.handlers.common.SerialiseOperation
 import com.bahadirakin.modules.OperationFactory
 import org.hamcrest.Matchers.equalTo
 import org.junit.Assert.assertThat
@@ -22,23 +24,29 @@ class HelloWorldHandlerTest {
     @Mock
     lateinit var helloWorldOperation: HelloWorldOperation
 
+    @Mock
+    lateinit var serialiseOperation: SerialiseOperation
+
     @InjectMocks
     lateinit var helloWorldHandler: HelloWorldHandler
 
     @Test
     fun handleRequest() {
         // Given
-        val name = "Bahadir"
+        val message = HelloMessage("Hello", "Bahadir")
+        val body = "{\"name\":\"Bahadir\", \"saying\":\"Hello\"}"
         given(operationFactory.helloWorldOperation()).willReturn(helloWorldOperation)
-        given(helloWorldOperation.execute()).willReturn(name)
+        given(operationFactory.serialiseOperation()).willReturn(serialiseOperation)
+        given(helloWorldOperation.execute()).willReturn(message)
+        given(serialiseOperation.convert(message)).willReturn(body)
 
         // When
-        val result = helloWorldHandler.handleRequest(HashMap(), mock(Context::class.java))
+        val result = helloWorldHandler.handleRequest(mock(APIGatewayProxyRequestEvent::class.java), mock(Context::class.java))
 
         // Then
         then(operationFactory).should().helloWorldOperation()
         then(helloWorldOperation).should().execute()
         assertThat(result.statusCode, equalTo(200))
-        assertThat(result.body, equalTo(String.format("{\"message\":\"%s\",\"input\":{}}", name)))
+        assertThat(result.body, equalTo(body))
     }
 }

@@ -2,7 +2,8 @@ package com.bahadirakin.handlers.hello
 
 import com.amazonaws.services.lambda.runtime.Context
 import com.amazonaws.services.lambda.runtime.RequestHandler
-import com.bahadirakin.handlers.ApiGatewayResponse
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import com.bahadirakin.modules.DaggerOperationFactory
 import com.bahadirakin.modules.OperationFactory
 import org.apache.logging.log4j.LogManager
@@ -10,7 +11,7 @@ import org.apache.logging.log4j.LogManager
 /**
  * Handler for hello world operation.
  */
-class HelloWorldHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
+class HelloWorldHandler : RequestHandler<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
     private val factory: OperationFactory
 
@@ -22,19 +23,21 @@ class HelloWorldHandler : RequestHandler<Map<String, Any>, ApiGatewayResponse> {
         this.factory = factory
     }
 
-    override fun handleRequest(input: Map<String, Any>, context: Context): ApiGatewayResponse {
-        LOG.info("received: " + input.keys.toString())
+    override fun handleRequest(event: APIGatewayProxyRequestEvent, context: Context): APIGatewayProxyResponseEvent {
+        LOG.info("received: " + event.path)
 
         val helloWorldOperation = factory.helloWorldOperation()
-        val name = helloWorldOperation.execute()
+        val helloMessage = helloWorldOperation.execute()
+        val body = factory.serialiseOperation().convert(helloMessage)
 
-        return ApiGatewayResponse.build {
-            objectBody = HelloResponse(name, input)
-            headers = mapOf("X-Powered-By" to "AWS Lambda & serverless")
-        }
+        return APIGatewayProxyResponseEvent()
+                .withBody(body)
+                .withStatusCode(OK)
+                .withHeaders(mapOf("X-Powered-By" to "AWS Lambda & serverless"))
     }
 
     companion object {
         private val LOG = LogManager.getLogger(HelloWorldHandler::class.java)
+        private const val OK = 200
     }
 }
