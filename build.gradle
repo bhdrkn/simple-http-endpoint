@@ -54,6 +54,10 @@ compileTestJava {
   options.encoding = "UTF-8"
 }
 
+clean {
+  file("sam-template.yml").delete()
+}
+
 shadowJar{
   classifier "all"
   transform(com.github.jengelman.gradle.plugins.shadow.transformers.Log4j2PluginsCacheFileTransformer)
@@ -100,4 +104,20 @@ dependencies {
 
 task deploy(type: Exec, dependsOn: "shadowJar") {
   commandLine "serverless", "deploy"
+}
+
+task createSAMTemplate(type: Exec, dependsOn: "shadowJar") {
+  group "Local Testing"
+  description "Creates a template for SAM using serverless.yml. It requires serverless-sam plugin."
+  commandLine "serverless", "sam", "export", "-o", "sam-template.yml"
+}
+
+task server(type: Exec, dependsOn: "createSAMTemplate") {
+  group "Local Testing"
+  description "Starts a SAM server on your local using the generated template. " +
+          "Every invocation on your local will initialise a new docker container just for request. " +
+          "This means that everytime your shadow jar will be unzipped. " +
+          "As a result you don't need to restart your server but invocations will take some time. " +
+          "It requires docker."
+  commandLine "sam", "local", "start-api", "--template", "sam-template.yml", "--region", "eu-west-2"
 }

@@ -1,5 +1,7 @@
 service: simple-http-endpoint
 
+plugins:
+  - serverless-sam
 
 provider:
   name: aws
